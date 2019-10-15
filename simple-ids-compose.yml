@@ -1,0 +1,100 @@
+version: "3"
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    environment:
+      - discovery.type=single-node
+    networks:
+      - walkoff_network
+    ports:
+      - "9200:9200"
+
+  kibana:
+    image: kibana-ea-plugin:7.4.0
+    networks:
+      - walkoff_network
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.4.0
+    networks:
+      - walkoff_network
+    depends_on:
+      - elasticsearch
+      - kibana
+    volumes:
+      - ./zeek:/pcap
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+
+  elastalert:
+    image: bitsensor/elastalert:3.0.0-beta.1
+    networks:
+      - walkoff_network
+    depends_on:
+      - elasticsearch
+      - kibana
+    volumes:
+      - ./elastalert/config/elastalert.yaml:/opt/elastalert/config.yaml
+      - ./elastalert/config/elastalert-test.yaml:/opt/elastalert/config-test.yaml
+      - ./elastalert/config/config.json:/opt/elastalert-server/config/config.json
+      - ./elastalert/rules:/opt/elastalert/rules
+      - ./elastalert/rule_templates:/opt/elastalert/rule_templates
+      - ./elastalert/elastalert_modules:/opt/elastalert/elastalert_modules
+
+  hive_elasticsearch:
+    image: blacktop/elasticsearch:6.8.2
+    networks:
+      - walkoff_network
+    environment:
+      - cluster.name=hive
+
+  cortex:
+    networks:
+      - walkoff_network
+    image: thehiveproject/cortex:3.0.0
+    depends_on:
+      - hive_elasticsearch
+    ports:
+      - "9001:9001"
+    command: --es-hostname hive_elasticsearch
+
+  thehive:
+    networks:
+      - walkoff_network
+    image: thehiveproject/thehive:3.4.0
+    depends_on:
+      - hive_elasticsearch
+      - cortex
+    ports:
+      - "9000:9000"
+    command: --es-hostname hive_elasticsearch
+
+  zeek:
+    networks:
+      - walkoff_network
+    image: blacktop/zeek:elastic
+    depends_on:
+      - elasticsearch
+      - kibana
+      - filebeat
+    entrypoint: /bin/sh
+    command: -c "while sleep 1000; do :; done"
+    volumes:
+      - ./zeek:/pcap
+      - ./zeek/local.zeek:/usr/local/zeek/share/zeek/site/local.zeek
+
+  sandbox:
+    networks:
+      - walkoff_network
+    image: nicolaka/netshoot
+    entrypoint: /bin/sh
+    command: -c "while sleep 1000; do :; done"
+
+networks:
+  walkoff_network:
+    external: true

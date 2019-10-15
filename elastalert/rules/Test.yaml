@@ -1,0 +1,13 @@
+es_host: elasticsearch
+es_port: 9200
+name: Log all invalid SSL certificates
+type: any
+index: logstash-*
+filter:
+  - term:
+      note: "SSL::Invalid_Server_Cert"
+
+alert: "elastalert_modules.walkoff_alerts.WalkoffAlerter"
+walkoff_url: 'https://walkoff_resource_nginx:8080/walkoff/api'
+workflow_name: 'ElastAlertExample'
+parameter_name: 'data'
