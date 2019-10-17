@@ -10,13 +10,13 @@ filebeat.config:
 
 filebeat.modules:
   - module: zeek
-    # All logs
-    connection:
-      enabled: true
-    dns:
-      enabled: true
-      var.paths:
-        - /pcap/dns*.log
+# DNS is disabled due to mismatched timestamp
+#    connection:
+#      enabled: true
+#    dns:
+#      enabled: true
+#      var.paths:
+#        - /pcap/dns*.log
     http:
       enabled: true
       var.paths:

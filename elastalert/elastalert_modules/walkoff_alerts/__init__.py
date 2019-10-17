@@ -1,7 +1,15 @@
 from elastalert.alerts import Alerter, BasicMatchString
 import urllib3
-import elastalert_modules.walkoff_client as walkoff
+import walkoff_client as walkoff
 import time
+
+
+log_file = "/opt/elastalert/rules/output.log"
+
+
+def log_to_file(filename, message):
+    with open(filename, "a+") as f:
+        f.write(message + "\n")
 
 
 class WalkoffAPI:
@@ -42,7 +50,6 @@ class WalkoffAPI:
         # Create a workflow API client and perform your desired actions
         workflow_api = walkoff.WorkflowsApi(self.api_client)
         workflow = workflow_api.read_workflow(workflow_id)
-        print(workflow)
 
         new_params = []
         if parameters:
@@ -63,33 +70,32 @@ class WalkoffAPI:
                                            workflow_variables=workflow.workflow_variables)
 
         r = wfq_api.execute_workflow(wfq_exec)
-        print(r)
+        return r
 
-
-# if __name__ == "__main__":
-#     w = WalkoffAPI("https://localhost:8080/api", "admin", "admin")
-#     w.execute_workflow("Test", {"targets": ["127.0.0.1"], "options": "-sS -T4"})
 
 class WalkoffAlerter(Alerter):
     # Options set in the rule.yaml
-    required_options = set(['walkoff_url', 'workflow_name', 'parameter_name'])
+    required_options = {'walkoff_url', 'workflow_name', 'parameter_name'}
 
     def alert(self, matches):
-        walkoff_url = self.rule.get('walkoff_schema', 'https://walkoff_resource_nginx:8080/walkoff/api')
+
+        walkoff_url = self.rule.get('walkoff_url', 'https://localhost:8080/walkoff/api')
         walkoff_user = self.rule.get('walkoff_user', 'admin')
         walkoff_pass = self.rule.get('walkoff_pass', 'admin')
         workflow_name = self.rule.get('workflow_name')
-        parameter_name = self.rule.get('parameter_name')
+        workflow_variable = self.rule.get('workflow_variable')
+
+        log_to_file(log_file, "Running: " + walkoff_url +
+                    ", workflow: " + workflow_name +
+                    ", variable: " + workflow_variable)
 
         # Instantiate WalkoffAPI object
         w = WalkoffAPI(walkoff_url, walkoff_user, walkoff_pass)
 
         for match in matches:
-            # match_string = str(BasicMatchString(self.rule, match))
-            # # w.execute_workflow("Test", {"targets": ["127.0.0.1"], "options": "-sS -T4"})
-            #
-            # # Execute Workflow
-            w.execute_workflow(workflow_name, {parameter_name: match})
+            log_to_file(log_file, "Input: " + match)
+            r = w.execute_workflow(workflow_name, workflow_variables={workflow_variable: match})
+            log_to_file(log_file, r)
 
     def get_info(self):
         return {'type': 'Walkoff Alerter'}
