@@ -80,8 +80,8 @@ class WalkoffAlerter(Alerter):
     def alert(self, matches):
 
         walkoff_url = self.rule.get('walkoff_url', 'https://localhost:8080/walkoff/api')
-        walkoff_user = self.rule.get('walkoff_user', 'admin')
-        walkoff_pass = self.rule.get('walkoff_pass', 'admin')
+        walkoff_user = self.rule.get('walkoff_user', 'super_admin')
+        walkoff_pass = self.rule.get('walkoff_pass', 'super_admin')
         workflow_name = self.rule.get('workflow_name')
         workflow_variable = self.rule.get('workflow_variable')
 

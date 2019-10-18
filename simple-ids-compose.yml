@@ -75,28 +75,6 @@ services:
       - "9000:9000"
     command: --es-hostname hive_elasticsearch
 
-#  zeek:
-#    networks:
-#      - walkoff_network
-#    image: blacktop/zeek:elastic
-#    depends_on:
-#      - elasticsearch
-#      - kibana
-#      - filebeat
-#    entrypoint: /bin/sh
-#    command: -c "while sleep 1000; do :; done"
-#    volumes:
-#      - ./zeek:/pcap
-#      - ./zeek/local.zeek:/usr/local/zeek/share/zeek/site/local.zeek
-#
-#  sandbox:
-#    networks:
-#      - walkoff_network
-#    image: nicolaka/netshoot
-#    entrypoint: /bin/sh
-#    command: -c "while sleep 1000; do :; done"
-
 networks:
   walkoff_network:
     external: true
-

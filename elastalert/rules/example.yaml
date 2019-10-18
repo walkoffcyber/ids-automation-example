@@ -12,4 +12,4 @@ timestamp_type: unix_ms
 alert: "elastalert_modules.walkoff_alerts.WalkoffAlerter"
 walkoff_url: 'https://172.17.0.1:8080/walkoff/api' # Replace with your docker0 interface IP
 workflow_name: 'ElastAlertExample'
-parameter_name: 'data'
+workflow_variable: 'data'
